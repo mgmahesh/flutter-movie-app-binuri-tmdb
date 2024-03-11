@@ -1,12 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:movie_app_example/client/api.dart';
-import 'package:movie_app_example/components/search_text.dart';
 import 'package:movie_app_example/components/text.dart';
 import 'package:movie_app_example/components/top_list.dart';
 import 'package:movie_app_example/components/trending_slider.dart';
 import 'package:movie_app_example/constants/colors.dart';
 import 'package:movie_app_example/constants/size.dart';
 import 'package:movie_app_example/models/movie.dart';
+import 'package:provider/provider.dart';
+import '../../components/drawer.dart';
+import '../Drawer/singin_user.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,11 +30,23 @@ class _HomeScreenState extends State<HomeScreen> {
     topList = ApiService().getTopMovie();
     upcomingList = ApiService().getUpcomingMovie();
     searchList = ApiService().getSearchMovie('the boss');
+
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<User?>(context);
+
+    String getFirstName() {
+      String? fullName = user?.displayName;
+      if (fullName != null) {
+        List<String> nameParts = fullName.split(' ');
+        return nameParts.isNotEmpty ? nameParts.first : '';
+      }
+      return '';
+    }
+
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -40,6 +55,16 @@ class _HomeScreenState extends State<HomeScreen> {
               BottomSearch(context);
             },
             icon: const Icon(Icons.search),
+          ),
+          IconButton(
+            onPressed: () {
+              SingIn(context);
+            },
+            icon: const Icon(Icons.supervised_user_circle),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Text(getFirstName()),
           )
         ],
         backgroundColor: Colors.transparent,
@@ -52,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
           filterQuality: FilterQuality.high,
         ),
       ),
+      drawer: AppDrawer(),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Padding(
@@ -239,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 textTitleInHome('Trending Nearly', 22),
-                                SizedBox(height: 16),
+                                const SizedBox(height: 16),
                                 FutureBuilder(
                                   future: trendingList,
                                   builder: (context, snapshot) {
